@@ -186,7 +186,7 @@ var subscription = device.connectionState.listen((BluetoothConnectionState state
         // 1. typically, start a periodic timer that tries to 
         //    reconnect, or just call connect() again right now
         // 2. you must always re-discover services after disconnection!
-        print("${device.disconnectReasonCode} ${device.disconnectReasonDescription}");
+        print("${device.disconnectReason?.code} ${device.disconnectReason?.description}");
     }
 });
 
@@ -226,6 +226,22 @@ await device.connectionState.where((val) => val == BluetoothConnectionState.conn
 // disable auto connect
 await device.disconnect()
 ```
+
+### Save Device
+
+To save a device between app restarts, just write the `remoteId` to a file.
+
+Now you can connect without needing to scan again, like so:
+
+```dart
+final String remoteId = await File('/remoteId.txt').readAsString();
+var device = BluetoothDevice.fromId(remoteId);
+// AutoConnect is convenient because it does not "time out"
+// even if the device is not available / turned off.
+await device.connect(autoConnect: true);
+
+```
+
 
 ### MTU
 
@@ -377,17 +393,6 @@ device.onServicesReset.listen(() async {
     print("Services Reset");
     await device.discoverServices();
 });
-```
-
-### Save Device
-
-To save a device, just write the remoteId somewhere.
-
-```dart
-// connect without scanning
-final File file = File('/remoteId.txt');
-var device = BluetoothDevice.fromId(await file.readAsString());
-await device.connect();
 ```
 
 ### Get Connected Devices
@@ -585,13 +590,13 @@ Add the following to your `Info.plist`
 
 When this key-value pair is included in the app’s Info.plist file, the system wakes up your app to process ble `read`, `write`, and `subscription` events.
 
-You may also have to use https://pub.dev/packages/flutter_isolate
+You may also have to use https://pub.dev/packages/workmanager
 
 **Note**: Upon being woken up, an app has around 10 seconds to complete a task. Apps that spend too much time executing in the background can be throttled back by the system or killed.
 
 ### Android
 
-You can try using https://pub.dev/packages/flutter_foreground_task or possibly https://pub.dev/packages/flutter_isolate
+You can try using https://pub.dev/packages/flutter_foreground_task or possibly https://pub.dev/packages/workmanager
 
 ## Reference
 
